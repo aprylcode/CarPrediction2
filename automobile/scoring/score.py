@@ -48,11 +48,11 @@ def init():
 
 
 input_sample = numpy.array([
-    [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0],
-    [10.0, 9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0]])
+    [6.1, 11.7, 10.0,34.3,1.5,8.5,1.0],
+    [4.1, 1.7, 10.0,444.3,1.5,81.5,1.5]])
 output_sample = numpy.array([
-    5021.509689995557,
-    3693.645386402646])
+    13.11,
+    18.22])
 
 
 # Inference_schema generates a schema for your web service
@@ -63,21 +63,8 @@ output_sample = numpy.array([
 def run(data, request_headers):
     result = model.predict(data)
 
-    # Demonstrate how we can log custom data into the Application Insights
-    # traces collection.
-    # The 'X-Ms-Request-id' value is generated internally and can be used to
-    # correlate a log entry with the Application Insights requests collection.
-    # The HTTP 'traceparent' header may be set by the caller to implement
-    # distributed tracing (per the W3C Trace Context proposed specification)
-    # and can be used to correlate the request to external systems.
-    print(('{{"RequestId":"{0}", '
-           '"TraceParent":"{1}", '
-           '"NumberOfPredictions":{2}}}'
-           ).format(
-               request_headers.get("X-Ms-Request-Id", ""),
-               request_headers.get("Traceparent", ""),
-               len(result)
-    ))
+
+
 
     return {"result": result.tolist()}
 
@@ -85,6 +72,6 @@ def run(data, request_headers):
 if __name__ == "__main__":
     # Test scoring
     init()
-    test_row = '{"data":[[1,2,3,4,5,6,7,8,9,10],[10,9,8,7,6,5,4,3,2,1]]}'
-    prediction = run(test_row, {})
-    print("Test result: ", prediction)
+    # test_row = '{"data":[[1,2,3,4,5,6,7,8,9,10],[10,9,8,7,6,5,4,3,2,1]]}'
+    # prediction = run(test_row, {})
+    # print("Test result: ", prediction)
