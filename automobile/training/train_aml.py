@@ -153,6 +153,7 @@ def main():
 
     # Evaluate and log the metrics returned from the train function
     metrics = get_model_metrics(model, data)
+    print(f"Metrics: {metrics}")
     for (k, v) in metrics.items():
         run.log(k, v)
         run.parent.log(k, v)
