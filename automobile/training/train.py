@@ -1,84 +1,64 @@
-"""
-Copyright (C) Microsoft Corporation. All rights reserved.​
- ​
-Microsoft Corporation (“Microsoft”) grants you a nonexclusive, perpetual,
-royalty-free right to use, copy, and modify the software code provided by us
-("Software Code"). You may not sublicense the Software Code or any use of it
-(except to your affiliates and to vendors to perform work on your behalf)
-through distribution, network access, service agreement, lease, rental, or
-otherwise. This license does not purport to express any claim of ownership over
-data you may have shared with Microsoft in the creation of the Software Code.
-Unless applicable law gives you more rights, Microsoft reserves all other
-rights not expressly granted herein, whether by implication, estoppel or
-otherwise. ​
- ​
-THE SOFTWARE CODE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS
-OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-MICROSOFT OR ITS LICENSORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
-BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
-IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-ARISING IN ANY WAY OUT OF THE USE OF THE SOFTWARE CODE, EVEN IF ADVISED OF THE
-POSSIBILITY OF SUCH DAMAGE.
-"""
-
-import os
 import pandas as pd
-from sklearn.linear_model import Ridge
-from sklearn.metrics import mean_squared_error
+import joblib
 from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error
 
-
-# Split the dataframe into test and train data
-def split_data(df):
-    X = df.drop('Y', axis=1).values
-    y = df['Y'].values
-
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=0)
-    data = {"train": {"X": X_train, "y": y_train},
-            "test": {"X": X_test, "y": y_test}}
+# Préparer les données
+def prepare_data(data):
+    data["horsepower"] = pd.to_numeric(data["horsepower"], errors="coerce")
+    numeric_df = data.select_dtypes(include=["number"])
+    data = data.fillna(numeric_df.mean())
+    data = data.drop(["car name"], axis=1)
     return data
 
+# Séparer les données en ensembles de test et d'entraînement
+def split_data(df):
+    X = df.drop(["mpg"], axis=1).values
+    y = df["mpg"].values
 
-# Train the model, return the model
-def train_model(data, ridge_args):
-    reg_model = Ridge(**ridge_args)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=0
+    )
+    data = {
+        "train": {"X": X_train, "y": y_train},
+        "test": {"X": X_test, "y": y_test}
+    }
+    return data
+
+# Entraîner le modèle et retourner le modèle
+def train_model(data, args):
+    reg_model = LinearRegression()
     reg_model.fit(data["train"]["X"], data["train"]["y"])
     return reg_model
 
+# Évaluer les métriques du modèle
+def get_model_metrics(reg_model, data):
+    predictions = reg_model.predict(data["test"]["X"])
+    mse = mean_squared_error(data["test"]["y"], predictions)
+    return {"mse": mse}
 
-# Evaluate the metrics for the model
-def get_model_metrics(model, data):
-    preds = model.predict(data["test"]["X"])
-    mse = mean_squared_error(preds, data["test"]["y"])
-    metrics = {"mse": mse}
-    return metrics
-
-
+# Fonction principale
 def main():
-    print("Running train.py")
+    # Charger les données
+    sample_data = pd.read_csv("auto-mpg.csv")
 
-    # Define training parameters
-    ridge_args = {"alpha": 0.5}
+    df = pd.DataFrame(sample_data)
+    df = prepare_data(df)
 
-    # Load the training data as dataframe
-    data_dir = "data"
-    data_file = os.path.join(data_dir, 'diabetes.csv')
-    train_df = pd.read_csv(data_file)
+    # Diviser les données en ensembles d'entraînement et de validation
+    data = split_data(df)
 
-    data = split_data(train_df)
+    # Entraîner le modèle sur l'ensemble d'entraînement
+    args = {}
+    reg = train_model(data, args)
 
-    # Train the model
-    model = train_model(data, ridge_args)
+    # Valider le modèle sur l'ensemble de validation
+    metrics = get_model_metrics(reg, data)
 
-    # Log the metrics for the model
-    metrics = get_model_metrics(model, data)
-    for (k, v) in metrics.items():
-        print(f"{k}: {v}")
+    # Sauvegarder le modèle
+    model_name = "sklearn_regression_model.pkl"
+    joblib.dump(value=reg, filename=model_name)
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
