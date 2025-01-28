@@ -28,11 +28,13 @@ def main():
         print(aml_compute)
 
     # Create a reusable Azure ML environment
+    print("Creating Reusable azure ml environment")
     environment = get_environment(
         aml_workspace,
         e.aml_env_name,
         conda_dependencies_file=e.aml_env_train_conda_dep_file,
         create_new=e.rebuild_env,
+        enable_docker=True,
     )  #
     run_config = RunConfiguration()
     run_config.environment = environment
