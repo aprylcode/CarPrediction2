@@ -146,12 +146,22 @@ def main():
     run.parent.tag("dataset_id", value=dataset.id)
 
     # Split the data into test/train
-    df = dataset.to_pandas_dataframe()
+    df0 = dataset.to_pandas_dataframe()
     df = prepare_data(df)
     data = split_data(df)
 
     # Train the model
     model = train_model(data, train_args)
+    explainer = TabularExplainer(
+    model,
+    data["train"]["X"],
+    features=df0.drop(['car name', 'mpg'], axis=1).columns
+)
+
+    global_explanation = explainer.explain_global(data["test"]["X"])
+
+    client = ExplanationClient.from_run(run)
+    client.upload_model_explanation(global_explanation, comment="MPG Prediction Explanation")
 
     # Evaluate and log the metrics returned from the train function
     metrics = get_model_metrics(model, data)
