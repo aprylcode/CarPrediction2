@@ -30,7 +30,7 @@ def get_environment(
             restored_environment = new_env
             if enable_docker is not None:
                 restored_environment.docker.enabled = enable_docker
-                restored_environment.docker.base_image = DEFAULT_GPU_IMAGE if use_gpu else DEFAULT_CPU_IMAGE  # NOQA: E501
+                restored_environment.docker.base_image = "mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04:latest"
             restored_environment.register(workspace)
 
         if restored_environment is not None:
