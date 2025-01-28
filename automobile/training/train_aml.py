@@ -30,6 +30,8 @@ import argparse
 import joblib
 import json
 from train import split_data, train_model, get_model_metrics, prepare_data
+from interpret.ext.blackbox import TabularExplainer
+from azureml.interpret import ExplanationClient
 
 
 def register_dataset(
